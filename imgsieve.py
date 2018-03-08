@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 
 import os
+from functools import partial
 
+import imagehash
 from PIL import Image
 
 
@@ -10,6 +12,8 @@ def find_images(directory, recursive=True):
 
     Args:
         directory: The path to search for images within.
+        recursive: A boolean value that determines whether to
+            search all subdirectories for images. Defaults to True.
 
     Returns:
         A list of paths to image files that were found.
@@ -32,9 +36,49 @@ def find_images(directory, recursive=True):
     return image_paths
 
 
+def hash_images(*image_paths, method='phash', hash_size=8):
+    """Hashes images using a specified hashing method.
+
+    Args:
+        *image_paths: The paths to the images to hash.
+        method: The image hashing method to use. Defaults to 'phash'.
+        hash_size: A base image size to use for hashing. Defaults to 8.
+
+    Returns:
+        A dictionary mapping hash values to image paths.
+
+    """
+    if method == 'ahash':
+        hash_function = imagehash.average_hash
+    elif method == 'phash':
+        hash_function = imagehash.phash
+    elif method == 'phash_simple':
+        hash_function = imagehash.phash_simple
+    elif method == 'dhash' or method == 'dhash_horizontal':
+        hash_function = imagehash.dhash
+    elif method == 'dhash_vertical':
+        hash_function = imagehash.dhash_vertical
+    elif method == 'whash' or method == 'whash-haar':
+        hash_function = imagehash.whash
+    elif method == 'whash-db4':
+        hash_function = partial(imagehash.whash, mode='db4')
+    else:
+        raise ValueError('Invalid hashing method: ' + method)
+
+    image_hashes = {}
+    for image_path in image_paths:
+        with Image.open(image_path) as img:
+            image_hash = hash_function(img)
+        image_hashes.setdefault(image_hash, []).append(image_path)
+
+    return image_hashes
+
+
 def main():
-    for image_path in find_images(os.path.expanduser('~/Pictures/')):
-        print(image_path)
+    image_paths = find_images(os.path.expanduser('~/Pictures'))
+    image_hashes = hash_images(*image_paths, method='ahash')
+    for image_hash, paths in image_hashes.items():
+        print(image_hash, '\n', paths, end=2*'\n')
 
 
 if __name__ == '__main__':
