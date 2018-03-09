@@ -36,16 +36,18 @@ def find_images(directory, recursive=True):
     return image_paths
 
 
-def hash_images(*image_paths, method='phash', hash_size=8):
+def hash_images(image_paths, method='phash', hash_size=8):
     """Hashes images using a specified hashing method.
 
     Args:
-        *image_paths: The paths to the images to hash.
+        image_paths: A list of paths to the images to hash.
         method: The image hashing method to use. Defaults to 'phash'.
         hash_size: A base image size to use for hashing. Defaults to 8.
 
     Returns:
-        A dictionary mapping hash values to image paths.
+        A tuple containing a dictionary mapping hash values to image
+        paths and another dictionary with only the hash values that
+        are shared between two or more images.
 
     """
     if method == 'ahash':
@@ -66,19 +68,24 @@ def hash_images(*image_paths, method='phash', hash_size=8):
         raise ValueError('Invalid hashing method: ' + method)
 
     image_hashes = {}
+    duplicates = {}
+
     for image_path in image_paths:
         with Image.open(image_path) as img:
-            image_hash = hash_function(img)
-        image_hashes.setdefault(image_hash, []).append(image_path)
+            image_hash = hash_function(img, hash_size)
+        if image_hashes.setdefault(image_hash, []):
+            duplicates.setdefault(str(image_hash), []).append(image_path)
+        image_hashes[image_hash].append(image_path)
 
-    return image_hashes
+    return (image_hashes, duplicates)
 
 
 def main():
     image_paths = find_images(os.path.expanduser('~/Pictures'))
-    image_hashes = hash_images(*image_paths, method='ahash')
+    image_hashes, duplicates = hash_images(image_paths, method='ahash')
     for image_hash, paths in image_hashes.items():
         print(image_hash, '\n', paths, end=2*'\n')
+    print(duplicates)
 
 
 if __name__ == '__main__':
