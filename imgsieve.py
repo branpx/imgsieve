@@ -80,12 +80,38 @@ def hash_images(image_paths, method='phash', hash_size=8):
     return (image_hashes, duplicates)
 
 
+def filter_duplicates(duplicates, mode='resolution'):
+    """Filters out duplicates to keep, according to the filter mode.
+
+    Args:
+        duplicates: A list of paths to duplicate/similar images.
+        mode: The criteria to filter by. Defaults to 'resolution'.
+
+    Returns:
+        The list of duplicates that remain after filtering.
+
+    """
+    def resolution(image_path):
+        with Image.open(image_path) as img:
+            return img.size[0] * img.size[1]
+
+    if mode == 'resolution':
+        highest_res = max(duplicates, key=resolution)
+        duplicates.remove(highest_res)
+
+    return duplicates
+
+
 def main():
     image_paths = find_images(os.path.expanduser('~/Pictures'))
     image_hashes, duplicates = hash_images(image_paths, method='ahash')
     for image_hash, paths in image_hashes.items():
         print(image_hash, '\n', paths, end=2*'\n')
-    print(duplicates)
+    print(duplicates, end='\n')
+    trash = []
+    for image_hash, paths in duplicates.items():
+        trash.append(filter_duplicates(paths[:]))
+    print(trash)
 
 
 if __name__ == '__main__':
