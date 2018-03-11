@@ -74,7 +74,9 @@ def hash_images(image_paths, method='phash', hash_size=8):
         with Image.open(image_path) as img:
             image_hash = hash_function(img, hash_size)
         if image_hashes.setdefault(image_hash, []):
-            duplicates.setdefault(str(image_hash), []).append(image_path)
+            duplicate = duplicates.setdefault(
+                str(image_hash), image_hashes[image_hash][:])
+            duplicate.append(image_path)
         image_hashes[image_hash].append(image_path)
 
     return (image_hashes, duplicates)
@@ -103,11 +105,11 @@ def filter_duplicates(duplicates, mode='resolution'):
 
 
 def main():
-    image_paths = find_images(os.path.expanduser('~/Pictures'))
+    image_paths = find_images(os.path.expanduser('~/Pictures/Screenshots'))
     image_hashes, duplicates = hash_images(image_paths, method='ahash')
     for image_hash, paths in image_hashes.items():
         print(image_hash, '\n', paths, end=2*'\n')
-    print(duplicates, end='\n')
+    print(duplicates, end=2*'\n')
     trash = []
     for image_hash, paths in duplicates.items():
         trash.append(filter_duplicates(paths[:]))
