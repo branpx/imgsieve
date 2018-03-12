@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from argparse import ArgumentParser
 import os
 from functools import partial
 
@@ -7,13 +8,13 @@ import imagehash
 from PIL import Image
 
 
-def find_images(directory, recursive=True):
+def find_images(directory, recursive=False):
     """Finds all images under the specified directory.
 
     Args:
         directory: The path to search for images within.
         recursive: A boolean value that determines whether to
-            search all subdirectories for images. Defaults to True.
+            search all subdirectories for images. Defaults to False.
 
     Returns:
         A list of paths to image files that were found.
@@ -105,8 +106,19 @@ def filter_duplicates(duplicates, mode='resolution'):
 
 
 def main():
-    image_paths = find_images(os.path.expanduser('~/Pictures/Screenshots'))
-    image_hashes, duplicates = hash_images(image_paths, method='ahash')
+    parser = ArgumentParser(prog='imgsieve', usage='%(prog)s [options] path',
+                            add_help=False)
+    parser.add_argument('-h', '--help', action='help',
+                        help='Show this help text and exit.')
+    parser.add_argument('path', nargs='?', default=os.getcwd(),
+                        help='Path to directory to search for images.'
+                        ' Uses cwd if ommited.')
+    parser.add_argument('-r', dest='recursive', action='store_true',
+                        help='Search for images recursively.')
+    args = parser.parse_args()
+
+    image_paths = find_images(os.path.expanduser(args.path), args.recursive)
+    image_hashes, duplicates = hash_images(image_paths)
     for image_hash, paths in image_hashes.items():
         print(image_hash, '\n', paths, end=2*'\n')
     print(duplicates, end=2*'\n')
