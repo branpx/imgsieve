@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
+
 from argparse import ArgumentParser
 import os
 from functools import partial
@@ -117,15 +119,26 @@ def main():
                         help='Search for images recursively.')
     args = parser.parse_args()
 
-    image_paths = find_images(os.path.expanduser(args.path), args.recursive)
+    image_paths = find_images(args.path, args.recursive)
+    print('Found', len(image_paths), 'images')
+    print('Hashing...')
     image_hashes, duplicates = hash_images(image_paths)
-    for image_hash, paths in image_hashes.items():
-        print(image_hash, '\n', paths, end=2*'\n')
-    print(duplicates, end=2*'\n')
+    print('Found', len(duplicates), 'images with duplicates/similars')
+    print('Total of', end=' ')
+    print(sum(len(dup_list) for dup_list in duplicates.values()), end=' ')
+    print('duplicate/similar image files')
+    print('Filtering...')
     trash = []
     for image_hash, paths in duplicates.items():
         trash.append(filter_duplicates(paths[:]))
-    print(trash)
+    print('Marked', end=' ')
+    print(sum(len(image_path) for image_path in trash), end=' ')
+    print('image files for deletion:', end=2*'\n')
+
+    for dup_list in trash:
+        for duplicate in dup_list:
+            print(duplicate)
+        print()
 
 
 if __name__ == '__main__':
