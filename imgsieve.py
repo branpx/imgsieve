@@ -103,6 +103,8 @@ def filter_duplicates(duplicates, mode='resolution'):
     if mode == 'resolution':
         highest_res = max(duplicates, key=resolution)
         duplicates.remove(highest_res)
+    else:
+        raise ValueError('Invalid filter mode: ' + mode)
 
     return duplicates
 
@@ -117,12 +119,20 @@ def main():
                         ' Uses cwd if ommited.')
     parser.add_argument('-r', dest='recursive', action='store_true',
                         help='Search for images recursively.')
+    parser.add_argument('--filter', dest='filter_mode', default='resolution',
+                        help='Criteria to filter by (default: %(default)s).')
+    parser.add_argument('--method', default='phash',
+                        help='Image hashing method to use'
+                        ' (default: %(default)s).')
+    parser.add_argument('--size', type=int, default=8,
+                        help='Base image size to use for hashing'
+                        ' (default: %(default)s).')
     args = parser.parse_args()
 
     image_paths = find_images(args.path, args.recursive)
     print('Found', len(image_paths), 'images')
     print('Hashing...')
-    image_hashes, duplicates = hash_images(image_paths)
+    image_hashes, duplicates = hash_images(image_paths, args.method, args.size)
     print('Found', len(duplicates), 'images with duplicates/similars')
     print('Total of', end=' ')
     print(sum(len(dup_list) for dup_list in duplicates.values()), end=' ')
@@ -130,7 +140,7 @@ def main():
     print('Filtering...')
     trash = []
     for image_hash, paths in duplicates.items():
-        trash.append(filter_duplicates(paths[:]))
+        trash.append(filter_duplicates(paths[:], args.filter_mode))
     print('Marked', end=' ')
     print(sum(len(image_path) for image_path in trash), end=' ')
     print('image files for deletion:', end=2*'\n')
