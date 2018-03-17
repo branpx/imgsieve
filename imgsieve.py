@@ -150,6 +150,12 @@ def main():
             print(duplicate)
         print()
 
+    confirm_delete = input('Delete images? (y/n): ')
+    if confirm_delete.lstrip().lower().startswith('y'):
+        for dup_list in trash:
+            for duplicate in dup_list:
+                os.remove(duplicate)
+
 
 if __name__ == '__main__':
     main()
