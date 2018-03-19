@@ -131,20 +131,28 @@ def main():
 
     image_paths = find_images(args.path, args.recursive)
     print('Found', len(image_paths), 'images')
+    if not image_paths:
+        return
+
     print('Hashing...')
     image_hashes, duplicates = hash_images(image_paths, args.method, args.size)
     print('Found', len(duplicates), 'images with duplicates/similars')
+    if not duplicates:
+        return
     print('Total of', end=' ')
     print(sum(len(dup_list) for dup_list in duplicates.values()), end=' ')
     print('duplicate/similar image files')
+
     print('Filtering...')
     trash = []
     for image_hash, paths in duplicates.items():
         trash.append(filter_duplicates(paths[:], args.filter_mode))
     print('Marked', end=' ')
     print(sum(len(image_path) for image_path in trash), end=' ')
-    print('image files for deletion:', end=2*'\n')
-
+    print('image files for deletion', end='')
+    if not trash:
+        return
+    print(':', end=2*'\n')
     for dup_list in trash:
         for duplicate in dup_list:
             print(duplicate)
