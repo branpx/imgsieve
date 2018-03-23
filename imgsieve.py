@@ -10,11 +10,11 @@ import imagehash
 from PIL import Image
 
 
-def find_images(directory, recursive=False):
+def find_images(directories, recursive=False):
     """Finds all images under the specified directory.
 
     Args:
-        directory: The path to search for images within.
+        directory: A list of paths to search for images within.
         recursive: A boolean value that determines whether to
             search all subdirectories for images. Defaults to False.
 
@@ -24,17 +24,18 @@ def find_images(directory, recursive=False):
     """
     image_paths = []
 
-    for root, _, files in os.walk(directory):
-        for file in files:
-            if (file.endswith('.jpg') or
-                    file.endswith('.jpeg') or
-                    file.endswith('.png') or
-                    file.endswith('.bmp') or
-                    file.endswith('.gif')):
-                image_paths.append(os.path.join(root, file))
+    for directory in directories:
+        for root, _, files in os.walk(directory):
+            for file in files:
+                if (file.endswith('.jpg') or
+                        file.endswith('.jpeg') or
+                        file.endswith('.png') or
+                        file.endswith('.bmp') or
+                        file.endswith('.gif')):
+                    image_paths.append(os.path.join(root, file))
 
-        if not recursive:
-            break
+            if not recursive:
+                break
 
     return image_paths
 
@@ -110,12 +111,12 @@ def filter_duplicates(duplicates, mode='resolution'):
 
 
 def main():
-    parser = ArgumentParser(prog='imgsieve', usage='%(prog)s [options] path',
+    parser = ArgumentParser(prog='imgsieve', usage='%(prog)s [options] [path]',
                             add_help=False)
     parser.add_argument('-h', '--help', action='help',
                         help='Show this help text and exit.')
-    parser.add_argument('path', nargs='?', default=os.getcwd(),
-                        help='Path to directory to search for images.'
+    parser.add_argument('path', nargs='*', default=os.getcwd(),
+                        help='Directory path(s) to search for images.'
                         ' Uses cwd if ommited.')
     parser.add_argument('-r', dest='recursive', action='store_true',
                         help='Search for images recursively.')
